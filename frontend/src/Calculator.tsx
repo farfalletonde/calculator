@@ -1,11 +1,18 @@
 import { useCalculator } from "./hooks/useCalculator";
+import { useCalculatorKeyboard } from "./hooks/useCalculatorKeyboard";
 
 type Key =
   | { kind: "digit"; value: string }
   | { kind: "op"; value: string; label: string }
   | { kind: "unary"; value: string; label: string }
+  | { kind: "backspace" }
   | { kind: "clear" }
   | { kind: "equals" };
+
+type KeyDef = {
+  key: Key;
+  span?: 2;
+};
 
 export const opSymbols: Record<string, string> = {
   add: "+",
@@ -22,35 +29,69 @@ export const opSymbols: Record<string, string> = {
   negate: "±",
 };
 
-const extraOps: Key[] = [
-  { kind: "op", value: "mod", label: "%" },
-  { kind: "op", value: "pow", label: "^" },
-  { kind: "unary", value: "sqrt", label: "√" },
-  { kind: "unary", value: "sqr", label: "x²" },
-  { kind: "unary", value: "cube", label: "x³" },
-  { kind: "unary", value: "recip", label: "1/x" },
-  { kind: "unary", value: "abs", label: "|x|" },
-  { kind: "unary", value: "negate", label: "±" },
+const rows: KeyDef[][] = [
+  [
+    { key: { kind: "clear" } },
+    { key: { kind: "backspace" } },
+    { key: { kind: "op", value: "mod", label: "%" } },
+    { key: { kind: "op", value: "pow", label: "^" } },
+  ],
+  [
+    { key: { kind: "unary", value: "sqrt", label: "√" } },
+    { key: { kind: "unary", value: "sqr", label: "x²" } },
+    { key: { kind: "unary", value: "cube", label: "x³" } },
+    { key: { kind: "unary", value: "recip", label: "1/x" } },
+  ],
+  [
+    { key: { kind: "unary", value: "abs", label: "|x|" }, span: 2 },
+    { key: { kind: "unary", value: "negate", label: "±" }, span: 2 },
+  ],
+  [
+    { key: { kind: "digit", value: "7" } },
+    { key: { kind: "digit", value: "8" } },
+    { key: { kind: "digit", value: "9" } },
+    { key: { kind: "op", value: "divide", label: "÷" } },
+  ],
+  [
+    { key: { kind: "digit", value: "4" } },
+    { key: { kind: "digit", value: "5" } },
+    { key: { kind: "digit", value: "6" } },
+    { key: { kind: "op", value: "multiply", label: "×" } },
+  ],
+  [
+    { key: { kind: "digit", value: "1" } },
+    { key: { kind: "digit", value: "2" } },
+    { key: { kind: "digit", value: "3" } },
+    { key: { kind: "op", value: "subtract", label: "−" } },
+  ],
+  [
+    { key: { kind: "digit", value: "0" }, span: 2 },
+    { key: { kind: "equals" } },
+    { key: { kind: "op", value: "add", label: "+" } },
+  ],
 ];
 
-const keys: Key[] = [
-  { kind: "digit", value: "7" },
-  { kind: "digit", value: "8" },
-  { kind: "digit", value: "9" },
-  { kind: "op", value: "divide", label: "÷" },
-  { kind: "digit", value: "4" },
-  { kind: "digit", value: "5" },
-  { kind: "digit", value: "6" },
-  { kind: "op", value: "multiply", label: "×" },
-  { kind: "digit", value: "1" },
-  { kind: "digit", value: "2" },
-  { kind: "digit", value: "3" },
-  { kind: "op", value: "subtract", label: "−" },
-  { kind: "clear" },
-  { kind: "digit", value: "0" },
-  { kind: "equals" },
-  { kind: "op", value: "add", label: "+" },
-];
+const keyId = (key: Key) => {
+  if (key.kind === "digit") return `d-${key.value}`;
+  if (key.kind === "op" || key.kind === "unary") return key.value;
+  return key.kind;
+};
+
+const ariaLabel = (key: Key) => {
+  if (key.kind === "digit") return key.value;
+  if (key.kind === "op" || key.kind === "unary") return key.value;
+  if (key.kind === "backspace") return "backspace";
+  if (key.kind === "clear") return "clear";
+  return "equals";
+};
+
+const keyText = (key: Key) => {
+  if (key.kind === "digit") return key.value;
+  if (key.kind === "op" || key.kind === "unary") return key.label;
+  if (key.kind === "backspace") return "⌫";
+  if (key.kind === "clear") return "C";
+  return "=";
+};
 
 export const Calculator = () => {
   const {
@@ -60,6 +101,7 @@ export const Calculator = () => {
     error,
     input,
     setOp,
+    backspace,
     clear,
     equals,
     applyUnary,
@@ -67,27 +109,24 @@ export const Calculator = () => {
 
   const activeOp = pendingOp ? opSymbols[pendingOp] : "";
 
-  const onKey = (key: Key) => {
+  useCalculatorKeyboard({
+    loading,
+    input,
+    setOp,
+    applyUnary,
+    backspace,
+    clear,
+    equals,
+  });
+
+  const press = (key: Key) => {
     if (loading) return;
     if (key.kind === "digit") input(key.value);
     if (key.kind === "op") setOp(key.value);
     if (key.kind === "unary") void applyUnary(key.value);
+    if (key.kind === "backspace") backspace();
     if (key.kind === "clear") clear();
     if (key.kind === "equals") void equals();
-  };
-
-  const label = (key: Key) => {
-    if (key.kind === "digit") return key.value;
-    if (key.kind === "op" || key.kind === "unary") return key.value;
-    if (key.kind === "clear") return "clear";
-    return "equals";
-  };
-
-  const text = (key: Key) => {
-    if (key.kind === "digit") return key.value;
-    if (key.kind === "op" || key.kind === "unary") return key.label;
-    if (key.kind === "clear") return "C";
-    return "=";
   };
 
   const btnClass = (key: Key) => {
@@ -123,33 +162,22 @@ export const Calculator = () => {
         </div>
       </div>
 
-      <div className="mb-2 grid grid-cols-4 gap-2">
-        {extraOps.map((key) => (
-          <button
-            key={label(key)}
-            type="button"
-            aria-label={label(key)}
-            disabled={loading}
-            onClick={() => onKey(key)}
-            className={`rounded-lg py-2 disabled:cursor-not-allowed disabled:opacity-50 ${btnClass(key)}`}
-          >
-            {text(key)}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-4 gap-2">
-        {keys.map((key) => (
-          <button
-            key={label(key)}
-            type="button"
-            aria-label={label(key)}
-            disabled={loading}
-            onClick={() => onKey(key)}
-            className={`rounded-lg py-3 text-lg disabled:cursor-not-allowed disabled:opacity-50 ${btnClass(key)}`}
-          >
-            {text(key)}
-          </button>
+      <div className="flex flex-col gap-2">
+        {rows.map((row, i) => (
+          <div key={i} className="grid grid-cols-4 gap-2">
+            {row.map(({ key, span }) => (
+              <button
+                key={keyId(key)}
+                type="button"
+                aria-label={ariaLabel(key)}
+                disabled={loading}
+                onClick={() => press(key)}
+                className={`rounded-lg py-3 text-lg disabled:cursor-not-allowed disabled:opacity-50 ${span === 2 ? "col-span-2" : ""} ${btnClass(key)}`}
+              >
+                {keyText(key)}
+              </button>
+            ))}
+          </div>
         ))}
       </div>
     </div>

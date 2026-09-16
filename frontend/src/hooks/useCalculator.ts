@@ -50,6 +50,16 @@ export const useCalculator = (calculate = defaultCalculate) => {
     }));
   };
 
+  const backspace = () => {
+    setError(null);
+    setState(({ display, firstNumber, pendingOp }) => {
+      if (Number.isNaN(Number(display)) || display.length <= 1) {
+        return { firstNumber, pendingOp, display: "0" };
+      }
+      return { firstNumber, pendingOp, display: display.slice(0, -1) };
+    });
+  };
+
   const clear = () => {
     setState(initialState);
     resetStatus();
@@ -123,6 +133,7 @@ export const useCalculator = (calculate = defaultCalculate) => {
     error,
     input,
     setOp,
+    backspace,
     clear,
     equals,
     applyUnary,

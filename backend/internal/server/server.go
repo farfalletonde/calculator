@@ -12,7 +12,7 @@ func New() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", health)
 	mux.HandleFunc("/calculate", calculate)
-	return mux
+	return withCORS(mux)
 }
 
 func health(w http.ResponseWriter, r *http.Request) {

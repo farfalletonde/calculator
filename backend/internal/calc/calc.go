@@ -75,3 +75,34 @@ func Recip(n int) (int, error) {
 	}
 	return 1 / n, nil
 }
+
+func Run(op string, a, b int) (int, error) {
+	switch op {
+	case "add":
+		return Add(a, b), nil
+	case "subtract":
+		return Subtract(a, b), nil
+	case "multiply":
+		return Multiply(a, b), nil
+	case "divide":
+		return Divide(a, b)
+	case "mod":
+		return Mod(a, b)
+	case "pow":
+		return Pow(a, b)
+	case "abs":
+		return Abs(a), nil
+	case "negate":
+		return Negate(a), nil
+	case "sqr":
+		return Sqr(a), nil
+	case "sqrt":
+		return Sqrt(a)
+	case "cube":
+		return Cube(a), nil
+	case "recip":
+		return Recip(a)
+	default:
+		return 0, errors.New("unknown operation")
+	}
+}

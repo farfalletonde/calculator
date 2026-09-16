@@ -86,13 +86,45 @@ export const useCalculator = (calculate = defaultCalculate) => {
     }
   };
 
+  const applyUnary = async (op: string) => {
+    if (loading) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { result } = await calculate({
+        operation: op,
+        a: Number(state.display),
+        b: 0,
+      });
+      setState({
+        display: String(result),
+        firstNumber: result,
+        pendingOp: null,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "error";
+      setError(message);
+      setState({
+        display: message,
+        firstNumber: null,
+        pendingOp: null,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     display: state.display,
+    pendingOp: state.pendingOp,
     loading,
     error,
     input,
     setOp,
     clear,
     equals,
+    applyUnary,
   };
 };

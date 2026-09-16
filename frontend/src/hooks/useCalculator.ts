@@ -15,8 +15,16 @@ const initialState: State = {
 
 export const useCalculator = (calculate = defaultCalculate) => {
   const [state, setState] = useState(initialState);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const resetStatus = () => {
+    setLoading(false);
+    setError(null);
+  };
 
   const input = (digit: string) => {
+    setError(null);
     setState(({ display, firstNumber, pendingOp }) => {
       const startingSecondNumber =
         pendingOp !== null && display === String(firstNumber);
@@ -34,6 +42,7 @@ export const useCalculator = (calculate = defaultCalculate) => {
   };
 
   const setOp = (op: string) => {
+    setError(null);
     setState(({ display, firstNumber }) => ({
       display,
       firstNumber: firstNumber ?? Number(display),
@@ -41,11 +50,17 @@ export const useCalculator = (calculate = defaultCalculate) => {
     }));
   };
 
-  const clear = () => setState(initialState);
+  const clear = () => {
+    setState(initialState);
+    resetStatus();
+  };
 
   const equals = async () => {
     const { pendingOp, firstNumber, display } = state;
-    if (!pendingOp || firstNumber === null) return;
+    if (!pendingOp || firstNumber === null || loading) return;
+
+    setLoading(true);
+    setError(null);
 
     try {
       const { result } = await calculate({
@@ -59,16 +74,22 @@ export const useCalculator = (calculate = defaultCalculate) => {
         pendingOp: null,
       });
     } catch (err) {
+      const message = err instanceof Error ? err.message : "error";
+      setError(message);
       setState({
-        display: err instanceof Error ? err.message : "error",
+        display: message,
         firstNumber: null,
         pendingOp: null,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
     display: state.display,
+    loading,
+    error,
     input,
     setOp,
     clear,

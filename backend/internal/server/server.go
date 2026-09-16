@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 
 	"calculator/internal/calc"
@@ -37,10 +38,19 @@ func calculate(w http.ResponseWriter, r *http.Request) {
 
 	result, err := calc.Run(req.Operation, req.A, req.B)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		status := http.StatusUnprocessableEntity
+		if err.Error() == "unknown operation" {
+			status = http.StatusBadRequest
+		}
+		http.Error(w, err.Error(), status)
+		return
+	}
+
+	if math.IsNaN(result) || math.IsInf(result, 0) {
+		http.Error(w, "invalid result", http.StatusUnprocessableEntity)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]int{"result": result})
+	json.NewEncoder(w).Encode(map[string]float64{"result": result})
 }

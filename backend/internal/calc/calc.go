@@ -76,32 +76,39 @@ func Recip(n int) (int, error) {
 	return 1 / n, nil
 }
 
-func Run(op string, a, b int) (int, error) {
+func Run(op string, a, b int) (float64, error) {
 	switch op {
 	case "add":
-		return Add(a, b), nil
+		return float64(Add(a, b)), nil
 	case "subtract":
-		return Subtract(a, b), nil
+		return float64(Subtract(a, b)), nil
 	case "multiply":
-		return Multiply(a, b), nil
+		return float64(Multiply(a, b)), nil
 	case "divide":
-		return Divide(a, b)
+		n, err := Divide(a, b)
+		return float64(n), err
 	case "mod":
-		return Mod(a, b)
+		n, err := Mod(a, b)
+		return float64(n), err
 	case "pow":
-		return Pow(a, b)
+		n, err := Pow(a, b)
+		return float64(n), err
 	case "abs":
-		return Abs(a), nil
+		return float64(Abs(a)), nil
 	case "negate":
-		return Negate(a), nil
+		return float64(Negate(a)), nil
 	case "sqr":
-		return Sqr(a), nil
+		return float64(Sqr(a)), nil
 	case "sqrt":
-		return Sqrt(a)
+		n, err := Sqrt(a)
+		return float64(n), err
 	case "cube":
-		return Cube(a), nil
+		return float64(Cube(a)), nil
 	case "recip":
-		return Recip(a)
+		n, err := Recip(a)
+		return float64(n), err
+	case "floatdiv":
+		return float64(a) / float64(b), nil
 	default:
 		return 0, errors.New("unknown operation")
 	}

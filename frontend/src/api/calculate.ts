@@ -8,10 +8,12 @@ export type CalculateResponse = {
   result: number;
 };
 
+const api = import.meta.env.PROD ? "http://localhost:8080" : "";
+
 export const calculate = async (
   req: CalculateRequest,
 ): Promise<CalculateResponse> => {
-  const res = await fetch("/calculate", {
+  const res = await fetch(`${api}/calculate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
